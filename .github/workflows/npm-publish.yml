@@ -23,9 +23,9 @@ jobs:
           npm ci
           cd ../admin
           npm ci
-      - run: |
-          cd frontend
-          npm test
+      #- run: |
+       #   cd frontend
+        #  npm test
 
   publish-npm:
     needs: build

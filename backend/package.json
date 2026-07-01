@@ -20,7 +20,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.17.0",
     "mongoose": "^8.24.1",
-    "multer": "^2.0.0",
+    "multer": "^2.2.0",
     "nodemon": "^3.1.14",
     "razorpay": "2.9.6-lineaje-01",
     "validator": "^13.15.15"

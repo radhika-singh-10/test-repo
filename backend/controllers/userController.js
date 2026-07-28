@@ -57,6 +57,13 @@ const loginUser = async (req, res) => {
 
     try {
         const { email, password } = req.body;
+
+        // Reject non-string credentials so query operators (e.g. {$gt},
+        // {$regex}) cannot be injected into the Mongoose query.
+        if (typeof email !== 'string' || typeof password !== 'string') {
+            return res.json({ success: false, message: "Invalid credentials" })
+        }
+
         const user = await userModel.findOne({ email })
 
         if (!user) {

@@ -137,35 +137,6 @@ const bookAppointment = async (req, res) => {
     try {
 
         const { userId, docId, slotDate, slotTime } = req.body
-
-        // Validate the slot inputs against the exact shapes the booking UI
-        // produces (slotDate = "D_M_YYYY", slotTime = "HH:MM AM/PM") before
-        // they are ever used as a slots_booked key or pushed value. This
-        // rejects reserved/inherited property names (e.g. "constructor",
-        // "__proto__", "toString", "valueOf") and arbitrary free-form
-        // strings at their source, so only well-formed calendar slots can
-        // reach the slots_booked object.
-        const slotDateMatch = typeof slotDate === 'string'
-            ? slotDate.match(/^(\d{1,2})_(\d{1,2})_(\d{4})$/)
-            : null
-        if (!slotDateMatch) {
-            return res.json({ success: false, message: 'Invalid slot date' })
-        }
-        const day = Number(slotDateMatch[1])
-        const month = Number(slotDateMatch[2])
-        const year = Number(slotDateMatch[3])
-        const parsedDate = new Date(year, month - 1, day)
-        if (
-            parsedDate.getFullYear() !== year ||
-            parsedDate.getMonth() !== month - 1 ||
-            parsedDate.getDate() !== day
-        ) {
-            return res.json({ success: false, message: 'Invalid slot date' })
-        }
-        if (typeof slotTime !== 'string' || !/^\d{1,2}:\d{2}\s?(AM|PM)$/i.test(slotTime)) {
-            return res.json({ success: false, message: 'Invalid slot time' })
-        }
-
         const docData = await doctorModel.findById(docId).select("-password")
 
         if (!docData.available) {
@@ -175,7 +146,7 @@ const bookAppointment = async (req, res) => {
         let slots_booked = docData.slots_booked
 
         // checking for slot availablity 
-        if (Object.prototype.hasOwnProperty.call(slots_booked, slotDate) && Array.isArray(slots_booked[slotDate])) {
+        if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
                 return res.json({ success: false, message: 'Slot Not Available' })
             }
@@ -274,11 +245,15 @@ const razorpayInstance = new razorpay({
 const paymentRazorpay = async (req, res) => {
     try {
 
-        const { appointmentId } = req.body
+        const { userId, appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
         if (!appointmentData || appointmentData.cancelled) {
             return res.json({ success: false, message: 'Appointment Cancelled or not found' })
+        }
+
+        if (appointmentData.userId !== userId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
         }
 
         // creating options for razorpay payment

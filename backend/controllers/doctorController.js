@@ -97,7 +97,11 @@ const doctorList = async (req, res) => {
 // Toggle doctor's availability
   const changeAvailability = async (req, res) => {
   try {
-    const { docId } = req.body;
+    // An authenticated doctor may only toggle their own availability, so the
+    // target id is taken from the verified JWT (req.user) and is never read
+    // from the request body. The admin route has no req.user and is allowed
+    // to target any doctor via the body.
+    const docId = req.user ? req.user.id : req.body.docId;
 
     if (!docId) {
       return res.status(400).json({ success: false, message: "Doctor ID missing" });

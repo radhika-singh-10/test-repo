@@ -11,8 +11,18 @@ const loginAdmin = async (req, res) => {
     try {
 
         const { email, password } = req.body
-
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+        const adminEmail = process.env.ADMIN_EMAIL
+        const adminPassword = process.env.ADMIN_PASSWORD
+        if (
+            typeof adminEmail !== "string" || adminEmail.length === 0 ||
+            typeof adminPassword !== "string" || adminPassword.length === 0
+        ) {
+            return res.json({ success: false, message: "Invalid credentials" })
+        }
+        if (typeof email !== "string" || typeof password !== "string") {
+            return res.json({ success: false, message: "Invalid credentials" })
+        }
+        if (email === adminEmail && password === adminPassword) {
             const token = jwt.sign({ role: "admin" }, process.env.JWT_SECRET)
             res.json({ success: true, token })
         } else {
